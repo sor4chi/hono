@@ -8,7 +8,6 @@ import { joinPaths, dirname, filterStaticGenerateRoutes } from './utils'
 
 const SSG_CONTEXT = 'HONO_SSG_CONTEXT'
 export const SSG_DISABLED_RESPONSE = new Response('SSG is disabled', { status: 404 })
-
 /**
  * @experimental
  * `FileSystemModule` is an experimental feature.
@@ -202,7 +201,7 @@ export const saveContentToFiles = async (
     if (typeof content === 'string') {
       await fsModule.writeFile(filePath, content)
     } else if (content instanceof ArrayBuffer) {
-      await fsModule.writeFile(filePath, bufferToString(content))
+      await fsModule.writeFile(filePath, new Uint8Array(content))
     }
     files.push(filePath)
   }

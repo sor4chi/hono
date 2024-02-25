@@ -24,6 +24,9 @@ describe('toSSG function', () => {
   let app: Hono
 
   const postParams = [{ post: '1' }, { post: '2' }]
+  const PNG_BASE64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC'
+  const PNG_BUFFER = Buffer.from(PNG_BASE64, 'base64')
 
   beforeEach(() => {
     app = new Hono()
@@ -63,6 +66,11 @@ describe('toSSG function', () => {
       ssgParams([{ user_id: '1' }, { user_id: '2' }, { user_id: '3' }]),
       (c) => c.html(<h1>{c.req.param('user_id')}</h1>)
     )
+
+    app.get('/binary.png', (c) => {
+      c.header('Content-Type', 'image/png')
+      return c.body(PNG_BUFFER)
+    })
 
     type Env = {
       Bindings: {
@@ -160,6 +168,8 @@ describe('toSSG function', () => {
     expect(fsMock.writeFile).toHaveBeenCalledWith('static/about.html', expect.any(String))
     expect(fsMock.writeFile).toHaveBeenCalledWith('static/bravo.html', expect.any(String))
     expect(fsMock.writeFile).toHaveBeenCalledWith('static/Charlie.html', expect.any(String))
+
+    expect(fsMock.writeFile).toHaveBeenCalledWith('static/binary.png', new Uint8Array(PNG_BUFFER))
   })
 
   it('should modify the request if the hook is provided', async () => {
@@ -174,7 +184,7 @@ describe('toSSG function', () => {
       return false
     }
     const result = await toSSG(app, fsMock, { beforeRequestHook })
-    expect(result.files).toHaveLength(10)
+    expect(result.files).toHaveLength(11)
   })
 
   it('should skip the route if the request hook returns false', async () => {
@@ -195,7 +205,7 @@ describe('toSSG function', () => {
       mkdir: vi.fn(() => Promise.resolve()),
     }
     const result = await toSSG(app, fsMock, { afterResponseHook })
-    expect(result.files).toHaveLength(10)
+    expect(result.files).toHaveLength(11)
   })
 
   it('should skip the route if the response hook returns false', async () => {
